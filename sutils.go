@@ -38,7 +38,7 @@ func Present(reqFields ...string) bool {
 
 // CountIgnoreCase searches an io.Reader for a given string in a case-insensitive way.
 // It returns the number of occurrences it found, or an error if something went wrong.
-func CountIgnoreCase(haystack io.Reader, needle string) (count int, err error) {
+func CountIgnoreCase(haystack io.Reader, needle string) (int, error) {
 	occurrences, err := FindIgnoreCase(haystack, needle)
 	if err != nil {
 		return 0, err
@@ -49,7 +49,7 @@ func CountIgnoreCase(haystack io.Reader, needle string) (count int, err error) {
 
 // CountCaseSensitive searches an io.Reader for a given string in a case sensitive way.
 // It returns the number of occurrences it found, or an error if something went wrong.
-func CountCaseSensitive(haystack io.Reader, needle string) (count int, err error) {
+func CountCaseSensitive(haystack io.Reader, needle string) (int, error) {
 	occurrences, err := FindCaseSensitive(haystack, needle)
 	if err != nil {
 		return 0, err
@@ -77,6 +77,7 @@ func FindIgnoreCase(haystack io.Reader, needle string) (occurrences []int, err e
 		if IContains(line, needle) {
 			occurrences = append(occurrences, lines)
 		}
+
 		lines++
 	}
 	return occurrences, nil
@@ -101,6 +102,7 @@ func FindCaseSensitive(haystack io.Reader, needle string) (occurrences []int, er
 		if strings.Contains(line, needle) {
 			occurrences = append(occurrences, lines)
 		}
+
 		lines++
 	}
 	return occurrences, nil

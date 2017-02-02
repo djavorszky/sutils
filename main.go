@@ -1,6 +1,11 @@
 package sutils
 
-import "regexp"
+import (
+	"bufio"
+	"io"
+	"regexp"
+	"strings"
+)
 
 // IContains returns true if the haystack contains the needle.
 // It searches in a case-insensitive way
@@ -29,4 +34,40 @@ func Present(reqFields ...string) bool {
 	}
 
 	return true
+}
+
+// CountIgnoreCase searches an io.Reader for a given string in a case-insensitive way.
+// It returns the number of occurrences it found, or an error if something went wrong.
+func CountIgnoreCase(haystack io.Reader, needle string) (count int, err error) {
+	scanner := bufio.NewScanner(haystack)
+
+	for scanner.Scan() {
+		if IContains(scanner.Text(), needle) {
+			count++
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+// CountCaseSensitive searches an io.Reader for a given string in a case sensitive way.
+// It returns the number of occurrences it found, or an error if something went wrong.
+func CountCaseSensitive(haystack io.Reader, needle string) (count int, err error) {
+	scanner := bufio.NewScanner(haystack)
+
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), needle) {
+			count++
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }

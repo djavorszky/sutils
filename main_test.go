@@ -1,6 +1,7 @@
 package sutils
 
 import "testing"
+import "bytes"
 
 type testcase struct {
 	Value    string
@@ -40,6 +41,66 @@ func TestIContains(t *testing.T) {
 		if res := IContains(c.Value, c.Search); res != c.Expected {
 			t.Errorf("Mismatch. Expected: %v, got: %v for testcase (%q, %q)", c.Expected, res, c.Value, c.Search)
 		}
+	}
+}
+
+var (
+	testString = `Once upon a midnight dreary, while I pondered, weak and weary,
+Over many a quaint and curious volume of forgotten lore—
+    While I nodded, nearly napping, suddenly there came a tapping,
+As of some one gently rapping, rapping at my chamber door.
+“’Tis some visitor,” I muttered, “tapping at my chamber door—
+            Only this and nothing more.”`
+)
+
+func TestCountIgnoreCase(t *testing.T) {
+	var (
+		result   int
+		expected int
+
+		buf *bytes.Buffer
+	)
+
+	buf = bytes.NewBufferString(testString)
+
+	result, _ = CountIgnoreCase(buf, "my")
+	expected = 2
+
+	if result != expected {
+		t.Errorf("Mismatch. Expected count=%d, got result=%d", expected, result)
+	}
+
+	buf = bytes.NewBufferString(testString)
+
+	result, _ = CountIgnoreCase(buf, "MY")
+	if result != expected {
+		t.Errorf("Mismatch. Expected count=%d, got result=%d", expected, result)
+	}
+}
+
+func TestCountCaseSensitive(t *testing.T) {
+	var (
+		result   int
+		expected int
+		buf      *bytes.Buffer
+	)
+
+	buf = bytes.NewBufferString(testString)
+
+	result, _ = CountCaseSensitive(buf, "my")
+	expected = 2
+
+	if result != expected {
+		t.Errorf("Mismatch. Expected count=%d, got result=%d", expected, result)
+	}
+
+	buf = bytes.NewBufferString(testString)
+
+	result, _ = CountCaseSensitive(buf, "MY")
+	expected = 0
+
+	if result != expected {
+		t.Errorf("Mismatch. Expected count=%d, got result=%d", expected, result)
 	}
 }
 

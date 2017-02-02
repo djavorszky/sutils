@@ -63,6 +63,8 @@ func CountCaseSensitive(haystack io.Reader, needle string) (count int, err error
 func FindIgnoreCase(haystack io.Reader, needle string) (occurrences []int, err error) {
 	lines := 0
 	scanner := bufio.NewScanner(haystack)
+	buf := make([]byte, 0, 64*1024)
+	scanner.Buffer(buf, 1024*1024)
 
 	for scanner.Scan() {
 		if IContains(scanner.Text(), needle) {
@@ -83,6 +85,8 @@ func FindIgnoreCase(haystack io.Reader, needle string) (occurrences []int, err e
 func FindCaseSensitive(haystack io.Reader, needle string) (occurrences []int, err error) {
 	lines := 0
 	scanner := bufio.NewScanner(haystack)
+	buf := make([]byte, 0, 64*1024)
+	scanner.Buffer(buf, 1024*1024)
 
 	for scanner.Scan() {
 		if strings.Contains(scanner.Text(), needle) {

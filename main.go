@@ -62,21 +62,23 @@ func CountCaseSensitive(haystack io.Reader, needle string) (count int, err error
 // It returns the line numbers where it such strings found, or an error if something went wrong.
 func FindIgnoreCase(haystack io.Reader, needle string) (occurrences []int, err error) {
 	lines := 0
-	scanner := bufio.NewScanner(haystack)
-	buf := make([]byte, 0, 64*1024)
-	scanner.Buffer(buf, 1024*1024)
+	reader := bufio.NewReader(haystack)
 
-	for scanner.Scan() {
-		if IContains(scanner.Text(), needle) {
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return nil, err
+		}
+
+		if IContains(line, needle) {
 			occurrences = append(occurrences, lines)
 		}
 		lines++
 	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
 	return occurrences, nil
 }
 
@@ -84,20 +86,22 @@ func FindIgnoreCase(haystack io.Reader, needle string) (occurrences []int, err e
 // It returns the line numbers where it such strings found, or an error if something went wrong.
 func FindCaseSensitive(haystack io.Reader, needle string) (occurrences []int, err error) {
 	lines := 0
-	scanner := bufio.NewScanner(haystack)
-	buf := make([]byte, 0, 64*1024)
-	scanner.Buffer(buf, 1024*1024)
+	reader := bufio.NewReader(haystack)
 
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), needle) {
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return nil, err
+		}
+
+		if strings.Contains(line, needle) {
 			occurrences = append(occurrences, lines)
 		}
 		lines++
 	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
 	return occurrences, nil
 }

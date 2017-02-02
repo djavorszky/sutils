@@ -39,35 +39,61 @@ func Present(reqFields ...string) bool {
 // CountIgnoreCase searches an io.Reader for a given string in a case-insensitive way.
 // It returns the number of occurrences it found, or an error if something went wrong.
 func CountIgnoreCase(haystack io.Reader, needle string) (count int, err error) {
-	scanner := bufio.NewScanner(haystack)
-
-	for scanner.Scan() {
-		if IContains(scanner.Text(), needle) {
-			count++
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
+	occurrences, err := FindIgnoreCase(haystack, needle)
+	if err != nil {
 		return 0, err
 	}
 
-	return count, nil
+	return len(occurrences), nil
 }
 
 // CountCaseSensitive searches an io.Reader for a given string in a case sensitive way.
 // It returns the number of occurrences it found, or an error if something went wrong.
 func CountCaseSensitive(haystack io.Reader, needle string) (count int, err error) {
+	occurrences, err := FindCaseSensitive(haystack, needle)
+	if err != nil {
+		return 0, err
+	}
+
+	return len(occurrences), nil
+}
+
+// FindIgnoreCase searches an io.Reader for a given string in a case-insensitive way.
+// It returns the line numbers where it such strings found, or an error if something went wrong.
+func FindIgnoreCase(haystack io.Reader, needle string) (occurrences []int, err error) {
+	lines := 0
+	scanner := bufio.NewScanner(haystack)
+
+	for scanner.Scan() {
+		if IContains(scanner.Text(), needle) {
+			occurrences = append(occurrences, lines)
+		}
+		lines++
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return occurrences, nil
+}
+
+// FindCaseSensitive searches an io.Reader for a given string in a case sensitive way.
+// It returns the line numbers where it such strings found, or an error if something went wrong.
+func FindCaseSensitive(haystack io.Reader, needle string) (occurrences []int, err error) {
+	lines := 0
 	scanner := bufio.NewScanner(haystack)
 
 	for scanner.Scan() {
 		if strings.Contains(scanner.Text(), needle) {
-			count++
+			occurrences = append(occurrences, lines)
 		}
+		lines++
 	}
 
 	if err := scanner.Err(); err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	return count, nil
+	return occurrences, nil
 }

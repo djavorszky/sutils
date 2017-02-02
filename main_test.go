@@ -58,10 +58,8 @@ func TestCountIgnoreCase(t *testing.T) {
 		result   int
 		expected int
 
-		buf *bytes.Buffer
+		buf = bytes.NewBufferString(testString)
 	)
-
-	buf = bytes.NewBufferString(testString)
 
 	result, _ = CountIgnoreCase(buf, "my")
 	expected = 2
@@ -82,10 +80,9 @@ func TestCountCaseSensitive(t *testing.T) {
 	var (
 		result   int
 		expected int
-		buf      *bytes.Buffer
-	)
 
-	buf = bytes.NewBufferString(testString)
+		buf = bytes.NewBufferString(testString)
+	)
 
 	result, _ = CountCaseSensitive(buf, "my")
 	expected = 2
@@ -101,6 +98,72 @@ func TestCountCaseSensitive(t *testing.T) {
 
 	if result != expected {
 		t.Errorf("Mismatch. Expected count=%d, got result=%d", expected, result)
+	}
+}
+
+func TestFindIgnoreCase(t *testing.T) {
+	var (
+		result      []int
+		expectedLen int
+
+		expectedLineNumbers = []int{3, 4}
+
+		buf = bytes.NewBufferString(testString)
+	)
+
+	result, _ = FindIgnoreCase(buf, "my")
+	expectedLen = 2
+
+	if len(result) != expectedLen {
+		t.Errorf("Mismatch. Expected count=%d, got result=%d", expectedLen, len(result))
+	}
+
+	if result[0] != expectedLineNumbers[0] || result[1] != expectedLineNumbers[1] {
+		t.Errorf("Error. Found match at %d and %d, but should've been at %d and %d", result[0], result[1], expectedLineNumbers[0], expectedLineNumbers[1])
+	}
+
+	buf = bytes.NewBufferString(testString)
+
+	result, _ = FindIgnoreCase(buf, "MY")
+	expectedLen = 2
+
+	if len(result) != expectedLen {
+		t.Errorf("Mismatch. Expected count=%d, got result=%d", expectedLen, len(result))
+	}
+
+	if result[0] != expectedLineNumbers[0] || result[1] != expectedLineNumbers[1] {
+		t.Errorf("Error. Found match at %d and %d, but should've been at %d and %d", result[0], result[1], expectedLineNumbers[0], expectedLineNumbers[1])
+	}
+}
+
+func TestFindCaseSensitive(t *testing.T) {
+	var (
+		result      []int
+		expectedLen int
+
+		expectedLineNumbers = []int{3, 4}
+
+		buf = bytes.NewBufferString(testString)
+	)
+
+	result, _ = FindCaseSensitive(buf, "my")
+	expectedLen = 2
+
+	if len(result) != expectedLen {
+		t.Errorf("Mismatch. Expected count=%d, got result=%d", expectedLen, len(result))
+	}
+
+	if result[0] != expectedLineNumbers[0] || result[1] != expectedLineNumbers[1] {
+		t.Errorf("Error. Found match at %d and %d, but should've been at %d and %d", result[0], result[1], expectedLineNumbers[0], expectedLineNumbers[1])
+	}
+
+	buf = bytes.NewBufferString(testString)
+
+	result, _ = FindCaseSensitive(buf, "MY")
+	expectedLen = 0
+
+	if len(result) != expectedLen {
+		t.Errorf("Mismatch. Expected count=%d, got result=%d", expectedLen, len(result))
 	}
 }
 

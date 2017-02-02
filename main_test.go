@@ -184,3 +184,15 @@ func BenchmarkIContainsShorted(b *testing.B) {
 		IContains("This is a rather long line and I'm curious whether that thing is in there or not.", "")
 	}
 }
+
+func BenchmarkFindIgnoreCase(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		FindIgnoreCase(bytes.NewBufferString(testString), "my")
+	}
+}
+
+func BenchmarkFindCaseSensitive(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		FindCaseSensitive(bytes.NewBufferString(testString), "my")
+	}
+}

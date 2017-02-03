@@ -61,7 +61,7 @@ func TestCountIgnoreCase(t *testing.T) {
 		buf = bytes.NewBufferString(testString)
 	)
 
-	result, _ = CountIgnoreCase(buf, "my")
+	result, _ = CountIgnoreCase(buf, "my chamber")
 	expected = 2
 
 	if result != expected {
@@ -70,7 +70,7 @@ func TestCountIgnoreCase(t *testing.T) {
 
 	buf = bytes.NewBufferString(testString)
 
-	result, _ = CountIgnoreCase(buf, "MY")
+	result, _ = CountIgnoreCase(buf, "MY chamber")
 	if result != expected {
 		t.Errorf("Mismatch. Expected count=%d, got result=%d", expected, result)
 	}
@@ -84,7 +84,7 @@ func TestCountCaseSensitive(t *testing.T) {
 		buf = bytes.NewBufferString(testString)
 	)
 
-	result, _ = CountCaseSensitive(buf, "my")
+	result, _ = CountCaseSensitive(buf, "my chamber")
 	expected = 2
 
 	if result != expected {
@@ -93,7 +93,7 @@ func TestCountCaseSensitive(t *testing.T) {
 
 	buf = bytes.NewBufferString(testString)
 
-	result, _ = CountCaseSensitive(buf, "MY")
+	result, _ = CountCaseSensitive(buf, "MY chamber")
 	expected = 0
 
 	if result != expected {
@@ -106,12 +106,12 @@ func TestFindIgnoreCase(t *testing.T) {
 		result      []int
 		expectedLen int
 
-		expectedLineNumbers = []int{3, 4}
+		expectedLineNumbers = []int{4, 5}
 
 		buf = bytes.NewBufferString(testString)
 	)
 
-	result, _ = FindIgnoreCase(buf, "my")
+	result, _ = FindIgnoreCase(buf, "my chamber")
 	expectedLen = 2
 
 	if len(result) != expectedLen {
@@ -124,7 +124,7 @@ func TestFindIgnoreCase(t *testing.T) {
 
 	buf = bytes.NewBufferString(testString)
 
-	result, _ = FindIgnoreCase(buf, "MY")
+	result, _ = FindIgnoreCase(buf, "MY chamber")
 	expectedLen = 2
 
 	if len(result) != expectedLen {
@@ -141,12 +141,12 @@ func TestFindCaseSensitive(t *testing.T) {
 		result      []int
 		expectedLen int
 
-		expectedLineNumbers = []int{3, 4}
+		expectedLineNumbers = []int{4, 5}
 
 		buf = bytes.NewBufferString(testString)
 	)
 
-	result, _ = FindCaseSensitive(buf, "my")
+	result, _ = FindCaseSensitive(buf, "my chamber")
 	expectedLen = 2
 
 	if len(result) != expectedLen {
@@ -159,7 +159,7 @@ func TestFindCaseSensitive(t *testing.T) {
 
 	buf = bytes.NewBufferString(testString)
 
-	result, _ = FindCaseSensitive(buf, "MY")
+	result, _ = FindCaseSensitive(buf, "MY chamber")
 	expectedLen = 0
 
 	if len(result) != expectedLen {

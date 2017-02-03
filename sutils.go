@@ -61,7 +61,7 @@ func CountCaseSensitive(haystack io.Reader, needle string) (int, error) {
 // FindIgnoreCase searches an io.Reader for a given string in a case-insensitive way.
 // It returns the line numbers where it such strings found, or an error if something went wrong.
 func FindIgnoreCase(haystack io.Reader, needle string) (occurrences []int, err error) {
-	lines := 0
+	lines := 1
 	reader := bufio.NewReader(haystack)
 
 	for {
@@ -86,7 +86,7 @@ func FindIgnoreCase(haystack io.Reader, needle string) (occurrences []int, err e
 // FindCaseSensitive searches an io.Reader for a given string in a case sensitive way.
 // It returns the line numbers where it such strings found, or an error if something went wrong.
 func FindCaseSensitive(haystack io.Reader, needle string) (occurrences []int, err error) {
-	lines := 0
+	lines := 1
 	reader := bufio.NewReader(haystack)
 
 	for {

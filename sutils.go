@@ -105,5 +105,14 @@ func FindCaseSensitive(haystack io.Reader, needle string) (occurrences []int, er
 
 		lines++
 	}
+
 	return occurrences, nil
+}
+
+// TrimNL trims the newline from the end of the string.
+func TrimNL(s string) string {
+	s = strings.TrimSuffix(s, "\n")
+	s = strings.TrimSuffix(s, "\r")
+
+	return s
 }

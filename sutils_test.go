@@ -1,7 +1,10 @@
 package sutils
 
-import "testing"
-import "bytes"
+import (
+	"bytes"
+	"fmt"
+	"testing"
+)
 
 type testcase struct {
 	Value    string
@@ -167,6 +170,43 @@ func TestFindCaseSensitive(t *testing.T) {
 	}
 }
 
+func TestTrimNL(t *testing.T) {
+	const (
+		input        = "Nothing\n"
+		inputWindows = "Nothing\r\n"
+		trimInput    = "Nothing"
+
+		noInput        = "\n"
+		noInputWindows = "\r\n"
+		trimNoInput    = ""
+	)
+
+	for _, in := range []string{input, inputWindows} {
+		trimmed := TrimNL(in)
+
+		fmt.Printf("Input: %q, trimmed: %q\n", in, trimmed)
+
+		if msg, ok := expect(trimInput, trimmed); !ok {
+			t.Error(msg)
+		}
+	}
+
+	for _, in := range []string{noInput, noInputWindows} {
+		trimmed := TrimNL(in)
+
+		fmt.Printf("Input: %q, trimmed: %q\n", in, trimmed)
+
+		if msg, ok := expect(trimNoInput, trimmed); !ok {
+			t.Error(msg)
+		}
+	}
+
+}
+
+/*
+============== Benchmarks ==============
+*/
+
 func BenchmarkIContainsFound(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		IContains("This is a rather long line and I'm curious whether that thing is in there or not.", "hat")
@@ -195,4 +235,16 @@ func BenchmarkFindCaseSensitive(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		FindCaseSensitive(bytes.NewBufferString(testString), "my")
 	}
+}
+
+/*
+============== Utils ==============
+*/
+
+func expect(expected, actual string) (string, bool) {
+	if actual != expected {
+		return fmt.Sprintf("Mismatch: Expected %q, got %q", expected, actual), false
+	}
+
+	return "", true
 }

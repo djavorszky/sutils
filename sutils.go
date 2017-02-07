@@ -37,7 +37,7 @@ func Present(reqFields ...string) bool {
 }
 
 // CountIgnoreCase searches an io.Reader for a given string in a case-insensitive way.
-// It returns the number of occurrences it found, or an error if something went wrong.
+// It returns the line numbers where it found such strings, or an error if something went wrong.
 func CountIgnoreCase(haystack io.Reader, needle string) (int, error) {
 	occurrences, err := FindIgnoreCase(haystack, needle)
 	if err != nil {
@@ -48,7 +48,7 @@ func CountIgnoreCase(haystack io.Reader, needle string) (int, error) {
 }
 
 // CountCaseSensitive searches an io.Reader for a given string in a case sensitive way.
-// It returns the number of occurrences it found, or an error if something went wrong.
+// It returns the line numbers where it found such strings, or an error if something went wrong.
 func CountCaseSensitive(haystack io.Reader, needle string) (int, error) {
 	occurrences, err := FindCaseSensitive(haystack, needle)
 	if err != nil {
@@ -59,7 +59,7 @@ func CountCaseSensitive(haystack io.Reader, needle string) (int, error) {
 }
 
 // FindIgnoreCase searches an io.Reader for a given string in a case-insensitive way.
-// It returns the line numbers where it such strings found, or an error if something went wrong.
+// It returns the line numbers where it found such strings, or an error if something went wrong.
 func FindIgnoreCase(haystack io.Reader, needle string) (occurrences []int, err error) {
 	lines := 1
 	reader := bufio.NewReader(haystack)
@@ -84,7 +84,7 @@ func FindIgnoreCase(haystack io.Reader, needle string) (occurrences []int, err e
 }
 
 // FindCaseSensitive searches an io.Reader for a given string in a case sensitive way.
-// It returns the line numbers where it such strings found, or an error if something went wrong.
+// It returns the line numbers where it found such strings, or an error if something went wrong.
 func FindCaseSensitive(haystack io.Reader, needle string) (occurrences []int, err error) {
 	lines := 1
 	reader := bufio.NewReader(haystack)
@@ -109,10 +109,61 @@ func FindCaseSensitive(haystack io.Reader, needle string) (occurrences []int, er
 	return occurrences, nil
 }
 
+// FindStartsWith searches an io.Reader for all lines that start with a given string in a case sensitive way.
+// It returns the line numbers where it found such strings, or an error if something went wrong.
+func FindStartsWith(haystack io.Reader, needle string) (occurrences []int, err error) {
+	lines := 1
+	reader := bufio.NewReader(haystack)
+
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return nil, err
+		}
+
+		if strings.HasPrefix(line, needle) {
+			occurrences = append(occurrences, lines)
+		}
+
+		lines++
+	}
+
+	return occurrences, nil
+}
+
 // TrimNL trims the newline from the end of the string.
 func TrimNL(s string) string {
 	s = strings.TrimSuffix(s, "\n")
 	s = strings.TrimSuffix(s, "\r")
 
 	return s
+}
+
+func FindWith(find func(string, string) bool, haystack io.Reader, needle string) (occurrences []int, err error) {
+
+	lines := 1
+	reader := bufio.NewReader(haystack)
+
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return nil, err
+		}
+
+		if find(line, needle) {
+			occurrences = append(occurrences, lines)
+		}
+
+		lines++
+	}
+
+	return occurrences, nil
 }

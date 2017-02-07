@@ -3,6 +3,7 @@ package sutils
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -114,7 +115,7 @@ func TestFindIgnoreCase(t *testing.T) {
 		buf = bytes.NewBufferString(testString)
 	)
 
-	result, _ = FindIgnoreCase(buf, "my chamber")
+	result, _ = FindWith(IContains, buf, "my chamber")
 	expectedLen = 2
 
 	if len(result) != expectedLen {
@@ -127,7 +128,7 @@ func TestFindIgnoreCase(t *testing.T) {
 
 	buf = bytes.NewBufferString(testString)
 
-	result, _ = FindIgnoreCase(buf, "MY chamber")
+	result, _ = FindWith(IContains, buf, "MY chamber")
 	expectedLen = 2
 
 	if len(result) != expectedLen {
@@ -149,7 +150,7 @@ func TestFindCaseSensitive(t *testing.T) {
 		buf = bytes.NewBufferString(testString)
 	)
 
-	result, _ = FindCaseSensitive(buf, "my chamber")
+	result, _ = FindWith(strings.Contains, buf, "my chamber")
 	expectedLen = 2
 
 	if len(result) != expectedLen {
@@ -163,6 +164,37 @@ func TestFindCaseSensitive(t *testing.T) {
 	buf = bytes.NewBufferString(testString)
 
 	result, _ = FindCaseSensitive(buf, "MY chamber")
+	expectedLen = 0
+
+	if len(result) != expectedLen {
+		t.Errorf("Mismatch. Expected count=%d, got result=%d", expectedLen, len(result))
+	}
+}
+
+func TestFindWithPrefix(t *testing.T) {
+	var (
+		result      []int
+		expectedLen int
+
+		expectedLineNumbers = []int{4, 5}
+
+		buf = bytes.NewBufferString(testString)
+	)
+
+	result, _ = FindWith(strings.HasPrefix, buf, "Once")
+	expectedLen = 1
+
+	if len(result) != expectedLen {
+		t.Errorf("Mismatch. Expected count=%d, got result=%d", expectedLen, len(result))
+	}
+
+	if result[0] != 1 {
+		t.Errorf("Error. Found match at %d and %d, but should've been at %d and %d", result[0], result[1], expectedLineNumbers[0], expectedLineNumbers[1])
+	}
+
+	buf = bytes.NewBufferString(testString)
+
+	result, _ = FindCaseSensitive(buf, "once")
 	expectedLen = 0
 
 	if len(result) != expectedLen {
@@ -184,8 +216,6 @@ func TestTrimNL(t *testing.T) {
 	for _, in := range []string{input, inputWindows} {
 		trimmed := TrimNL(in)
 
-		fmt.Printf("Input: %q, trimmed: %q\n", in, trimmed)
-
 		if msg, ok := expect(trimInput, trimmed); !ok {
 			t.Error(msg)
 		}
@@ -193,8 +223,6 @@ func TestTrimNL(t *testing.T) {
 
 	for _, in := range []string{noInput, noInputWindows} {
 		trimmed := TrimNL(in)
-
-		fmt.Printf("Input: %q, trimmed: %q\n", in, trimmed)
 
 		if msg, ok := expect(trimNoInput, trimmed); !ok {
 			t.Error(msg)

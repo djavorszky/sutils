@@ -265,6 +265,24 @@ func BenchmarkFindCaseSensitive(b *testing.B) {
 	}
 }
 
+func BenchmarkFindWithStringsContains(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		FindWith(strings.Contains, bytes.NewBufferString(testString), "weary")
+	}
+}
+
+func BenchmarkFindWithStringsHasPrefix(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		FindWith(strings.HasPrefix, bytes.NewBufferString(testString), "weary")
+	}
+}
+
+func BenchmarkFindWithStringsContainsAny(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		FindWith(strings.ContainsAny, bytes.NewBufferString(testString), "weary")
+	}
+}
+
 /*
 ============== Utils ==============
 */

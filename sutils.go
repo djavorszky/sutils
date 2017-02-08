@@ -5,6 +5,8 @@ import (
 	"io"
 	"regexp"
 	"strings"
+
+	"github.com/icrowley/fake"
 )
 
 // IContains returns true if the haystack contains the needle.
@@ -166,4 +168,21 @@ func FindWith(find func(string, string) bool, haystack io.Reader, needle string)
 	}
 
 	return occurrences, nil
+}
+
+// RandUserName returns a random username that can be used for databases
+func RandUserName() string {
+	res := strings.Split(fake.ProductName(), " ")[:1]
+
+	return strings.ToLower(strings.Join(res, "_"))
+}
+
+// RandDBName returns a random name that can be used as a name for a database
+func RandDBName() string {
+	return strings.ToLower(fake.Brand())
+}
+
+// RandPassword returns a random password that can be used for databases
+func RandPassword() string {
+	return RandUserName()
 }

@@ -170,19 +170,24 @@ func FindWith(find func(string, string) bool, haystack io.Reader, needle string)
 	return occurrences, nil
 }
 
-// RandUserName returns a random username that can be used for databases
-func RandUserName() string {
-	res := strings.Split(fake.ProductName(), " ")[:1]
+// RandName returns a random username that can be used for databases
+func RandName() string {
+	tmp := strings.Split(fake.ProductName(), " ")[:2]
+	res := strings.ToLower(strings.Join(tmp, "_"))
 
-	return strings.ToLower(strings.Join(res, "_"))
+	if len(res) > 16 {
+		res = res[0:16]
+	}
+
+	return res
 }
 
 // RandDBName returns a random name that can be used as a name for a database
 func RandDBName() string {
-	return strings.ToLower(fake.Brand())
+	return RandName()
 }
 
 // RandPassword returns a random password that can be used for databases
 func RandPassword() string {
-	return RandUserName()
+	return RandName()
 }

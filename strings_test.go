@@ -7,38 +7,36 @@ import (
 	"testing"
 )
 
-type testcase struct {
-	Value    string
-	Search   string
-	Expected bool
-}
-
 func TestIContains(t *testing.T) {
-	pairs := []testcase{
+	pairs := []struct {
+		Value    string
+		Search   string
+		Expected bool
+	}{
 		// check exact matches with varying cases
-		testcase{"hello", "hello", true},
-		testcase{"hello", "HELLO", true},
-		testcase{"HELLO", "hello", true},
-		testcase{"heLLo", "hello", true},
-		testcase{"hello", "HeLLo", true},
+		{"hello", "hello", true},
+		{"hello", "HELLO", true},
+		{"HELLO", "hello", true},
+		{"heLLo", "hello", true},
+		{"hello", "HeLLo", true},
 		// check with space
-		testcase{"HELLO there", "hello", true},
-		testcase{"heLLo there", "lo th", true},
-		testcase{"hello there", "LO TH", true},
+		{"HELLO there", "hello", true},
+		{"heLLo there", "lo th", true},
+		{"hello there", "LO TH", true},
 		// check submatches with varying cases
-		testcase{"hello", "el", true},
-		testcase{"hello", "EL", true},
-		testcase{"hello", "eL", true},
+		{"hello", "el", true},
+		{"hello", "EL", true},
+		{"hello", "eL", true},
 		// check false hits
-		testcase{"hello", "oh", false},
-		testcase{"hello", "OH", false},
-		testcase{"hello", "oH", false},
-		testcase{"this is", "ss", false},
-		testcase{"this is", "sS", false},
-		testcase{"this is", "SS", false},
-		testcase{"", "", false},
-		testcase{"hello", "", false},
-		testcase{"", "hello", false},
+		{"hello", "oh", false},
+		{"hello", "OH", false},
+		{"hello", "oH", false},
+		{"this is", "ss", false},
+		{"this is", "sS", false},
+		{"this is", "SS", false},
+		{"", "", false},
+		{"hello", "", false},
+		{"", "hello", false},
 	}
 
 	for _, c := range pairs {
@@ -228,6 +226,10 @@ func TestTrimNL(t *testing.T) {
 			t.Error(msg)
 		}
 	}
+
+}
+
+func TestOccurs(t *testing.T) {
 
 }
 

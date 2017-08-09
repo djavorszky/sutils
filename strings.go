@@ -2,11 +2,10 @@ package sutils
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"regexp"
 	"strings"
-
-	"github.com/icrowley/fake"
 )
 
 // IContains returns true if the haystack contains the needle.
@@ -172,24 +171,27 @@ func FindWith(find func(string, string) bool, haystack io.Reader, needle string)
 	return occurrences, nil
 }
 
-// RandName returns a random username that can be used for databases
-func RandName() string {
-	tmp := strings.Split(fake.ProductName(), " ")[:2]
-	res := strings.ToLower(strings.Join(tmp, "_"))
+// Occurs returns a map of ints-to-bools representing the
+// line numbers in the haystack where any of the searched
+// lines of "t" can be found by the "method" function.
+func Occurs(f func(string, string) bool, haystack io.Reader, t ...[]string) (map[int]bool, error) {
+	found := make(map[int]bool)
 
-	if len(res) > 16 {
-		res = res[0:16]
+	for _, strslice := range t {
+		for _, str := range strslice {
+			lines, err := FindWith(f, haystack, str)
+			if err != nil {
+				return nil, fmt.Errorf("searching for %q failed: %s", str, err.Error())
+			}
+			if len(lines) > 1 {
+				return nil, fmt.Errorf("more than one %q statements found in dump", str)
+			}
+
+			if len(lines) == 1 {
+				found[lines[0]] = true
+			}
+		}
 	}
 
-	return res
-}
-
-// RandDBName returns a random name that can be used as a name for a database
-func RandDBName() string {
-	return RandName()
-}
-
-// RandPassword returns a random password that can be used for databases
-func RandPassword() string {
-	return RandName()
+	return found, nil
 }

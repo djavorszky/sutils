@@ -145,8 +145,10 @@ func TrimNL(s string) string {
 	return s
 }
 
+// FindWith locates and returns all occurrences of needle in the haystack.
+// It does its job via the provided find function which should return true
+// if the second argument is found in the first one, false otherwise.
 func FindWith(find func(string, string) bool, haystack io.Reader, needle string) (occurrences []int, err error) {
-
 	lines := 1
 	reader := bufio.NewReader(haystack)
 

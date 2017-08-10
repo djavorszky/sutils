@@ -147,12 +147,19 @@ func TrimNL(s string) string {
 // FindWith locates and returns all occurrences of needle in the haystack.
 // It does its job via the provided find function which should return true
 // if the second argument is found in the first one, false otherwise.
-func FindWith(find func(string, string) bool, haystack io.Reader, needle string) (occurrences []int, err error) {
-	lines := 1
-	reader := bufio.NewReader(haystack)
+//
+// FindWith's return is indexed from 1 instead of 0.
+func FindWith(find func(string, string) bool, haystack io.Reader, needle string) ([]int, error) {
+	occurrences := make([]int, 0)
 
+	if needle == "" {
+		return occurrences, nil
+	}
+
+	lnum := 1
+	r := bufio.NewReader(haystack)
 	for {
-		line, err := reader.ReadString('\n')
+		line, _, err := r.ReadLine()
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -161,37 +168,107 @@ func FindWith(find func(string, string) bool, haystack io.Reader, needle string)
 			return nil, err
 		}
 
-		if find(line, needle) {
-			occurrences = append(occurrences, lines)
+		if find(string(line), needle) {
+			occurrences = append(occurrences, lnum)
 		}
 
-		lines++
+		lnum++
 	}
 
 	return occurrences, nil
 }
 
-// Occurs returns a map of ints-to-bools representing the
-// line numbers in the haystack where any of the searched
-// lines of "t" can be found by the "method" function.
-func Occurs(f func(string, string) bool, haystack io.Reader, t ...[]string) (map[int]bool, error) {
-	found := make(map[int]bool)
+// OccursWith applies the "find" function to haystack on all needles. Utilizes
+// "FindWith"
+func OccursWith(find func(string, string) bool, haystack io.Reader, needles []string) ([]int, error) {
+	occurrences := make([]int, 0)
 
-	for _, strslice := range t {
-		for _, str := range strslice {
-			lines, err := FindWith(f, haystack, str)
-			if err != nil {
-				return nil, fmt.Errorf("searching for %q failed: %s", str, err.Error())
-			}
-			if len(lines) > 1 {
-				return nil, fmt.Errorf("more than one %q statements found in dump", str)
-			}
-
-			if len(lines) == 1 {
-				found[lines[0]] = true
-			}
+	for _, needle := range needles {
+		lines, err := FindWith(find, haystack, needle)
+		if err != nil {
+			return nil, err
 		}
+
+		occurrences = append(occurrences, lines...)
 	}
 
-	return found, nil
+	return occurrences, nil
+}
+
+// CopyLines copies the lines specified in the "lines" from the
+// io.Reader "from" to the io.Writer "to".
+//
+// Replaces carriage returns with normal returns
+func CopyLines(from io.Reader, lines []int, to io.Writer) error {
+	if len(lines) == 0 {
+		return nil
+	}
+
+	lineMap := make(map[int]bool)
+
+	for _, l := range lines {
+		lineMap[l] = true
+	}
+
+	r := bufio.NewReader(from)
+	lnum := 0
+
+	for {
+
+		line, _, err := r.ReadLine()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return fmt.Errorf("error reading from reader: %v", err)
+		}
+
+		lnum++
+
+		if _, ok := lineMap[lnum]; !ok {
+			continue
+		}
+
+		to.Write([]byte(line))
+		to.Write([]byte("\n"))
+	}
+
+	return nil
+}
+
+// CopyWithoutLines copies from the reader "from" to the writer
+// "to" without the line numbers specified by "lines".
+func CopyWithoutLines(from io.Reader, lines []int, to io.Writer) error {
+	lineMap := make(map[int]bool)
+
+	for _, l := range lines {
+		lineMap[l] = true
+	}
+
+	r := bufio.NewReader(from)
+	lnum := 0
+
+	for {
+
+		line, _, err := r.ReadLine()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return fmt.Errorf("error reading from reader: %v", err)
+		}
+
+		lnum++
+
+		if _, ok := lineMap[lnum]; ok {
+			continue
+		}
+
+		to.Write([]byte(line))
+		to.Write([]byte("\n"))
+	}
+
+	return nil
 }

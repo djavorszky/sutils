@@ -3,6 +3,8 @@ package sutils
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -226,11 +228,164 @@ func TestTrimNL(t *testing.T) {
 			t.Error(msg)
 		}
 	}
-
 }
 
-func TestOccurs(t *testing.T) {
+func TestFindWith(t *testing.T) {
+	tests := []struct {
+		Haystack string
+		Needle   string
+		Expected []int
+	}{
+		{"looking for this\nbut not for that\n", "", []int{}},
+		{"looking for this\nbut not for that\n", "Madness", []int{}},
+		{"looking for this\nbut not for that\n", "this", []int{1}},
+		{"looking for this\nbut not for that\n", "that", []int{2}},
+		{"looking for this\nbut not for that\n", "for", []int{1, 2}},
+	}
 
+	for _, test := range tests {
+		found, err := FindWith(strings.Contains, bytes.NewBufferString(test.Haystack), test.Needle)
+		if err != nil {
+			t.Errorf("FindWith(strings.Contains, %q, %q) errored out: %v", test.Haystack, test.Needle, err)
+		}
+
+		if !reflect.DeepEqual(test.Expected, found) {
+			t.Errorf("FindWith(strings.Contains, %q, %q) result mismatch. Expected %#v, got %#v", test.Haystack, test.Needle, test.Expected, found)
+		}
+	}
+}
+
+func TestOccursWith(t *testing.T) {
+	tests := []struct {
+		Haystack string
+		Needles  []string
+		Expected []int
+	}{
+		{"looking for this\nbut not for that\n", []string{""}, []int{}},
+		{"looking for this\nbut not for that\n", []string{"this"}, []int{1}},
+		{"looking for this\nbut not for that\n", []string{"that"}, []int{2}},
+		{"looking for this\nbut not for that\n", []string{"for"}, []int{1, 2}},
+
+		{"looking for this\nbut not for that", []string{""}, []int{}},
+		{"looking for this\nbut not for that", []string{"this"}, []int{1}},
+		{"looking for this\nbut not for that", []string{"that"}, []int{2}},
+		{"looking for this\nbut not for that", []string{"for"}, []int{1, 2}},
+
+		{"looking for this\r\nbut not for that\r\n", []string{""}, []int{}},
+		{"looking for this\r\nbut not for that\r\n", []string{"this"}, []int{1}},
+		{"looking for this\r\nbut not for that\r\n", []string{"that"}, []int{2}},
+		{"looking for this\r\nbut not for that\r\n", []string{"for"}, []int{1, 2}},
+
+		{"looking for this\r\nbut not for that", []string{""}, []int{}},
+		{"looking for this\r\nbut not for that", []string{"this"}, []int{1}},
+		{"looking for this\r\nbut not for that", []string{"that"}, []int{2}},
+		{"looking for this\r\nbut not for that", []string{"for"}, []int{1, 2}},
+	}
+
+	for _, test := range tests {
+		found, err := OccursWith(strings.Contains, bytes.NewBufferString(test.Haystack), test.Needles)
+		if err != nil {
+			t.Errorf("OccursWith(strings.Contains, %q, %q) errored out: %v", test.Haystack, test.Needles, err)
+		}
+
+		if !reflect.DeepEqual(test.Expected, found) {
+			t.Errorf("OccursWith(strings.Contains, %q, %q) result mismatch. Expected %#v, got %#v", test.Haystack, test.Needles, test.Expected, found)
+		}
+	}
+}
+
+func TestCopyLines(t *testing.T) {
+	tests := []struct {
+		From     string
+		Lines    []int
+		Expected string
+	}{
+		{"LineOne\nLineTwo\nLineThree\n", []int{1, 2, 3}, "LineOne\nLineTwo\nLineThree\n"},
+		{"LineOne\nLineTwo\nLineThree\n", []int{1}, "LineOne\n"},
+		{"LineOne\nLineTwo\nLineThree\n", []int{2}, "LineTwo\n"},
+		{"LineOne\nLineTwo\nLineThree\n", []int{3}, "LineThree\n"},
+		{"LineOne\nLineTwo\nLineThree\n", []int{1, 2}, "LineOne\nLineTwo\n"},
+		{"LineOne\nLineTwo\nLineThree\n", []int{1, 3}, "LineOne\nLineThree\n"},
+		{"LineOne\nLineTwo\nLineThree\n", []int{}, ""},
+
+		{"LineOne\r\nLineTwo\r\nLineThree\r\n", []int{1, 2, 3}, "LineOne\nLineTwo\nLineThree\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree\r\n", []int{1}, "LineOne\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree\r\n", []int{2}, "LineTwo\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree\r\n", []int{3}, "LineThree\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree\r\n", []int{1, 2}, "LineOne\nLineTwo\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree\r\n", []int{1, 3}, "LineOne\nLineThree\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree\r\n", []int{}, ""},
+
+		{"LineOne\r\nLineTwo\r\nLineThree", []int{1, 2, 3}, "LineOne\nLineTwo\nLineThree\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree", []int{1}, "LineOne\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree", []int{2}, "LineTwo\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree", []int{3}, "LineThree\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree", []int{1, 2}, "LineOne\nLineTwo\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree", []int{1, 3}, "LineOne\nLineThree\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree", []int{}, ""},
+	}
+
+	for _, test := range tests {
+		var to bytes.Buffer
+
+		err := CopyLines(bytes.NewBufferString(test.From), test.Lines, &to)
+		if err != nil {
+			t.Errorf("CopyLines(%q, %v, %v) errored out: %v", test.From, test.Lines, to, err)
+		}
+
+		read, _ := ioutil.ReadAll(&to)
+
+		if string(read) != test.Expected {
+			t.Errorf("CopyLines(%q, %v, ..) result mismatch. Expected %q, got %q", test.From, test.Lines, test.Expected, string(read))
+		}
+	}
+}
+
+func TestCopyWithoutLines(t *testing.T) {
+	tests := []struct {
+		From     string
+		Lines    []int
+		Expected string
+	}{
+		{"LineOne\nLineTwo\nLineThree\n", []int{}, "LineOne\nLineTwo\nLineThree\n"},
+		{"LineOne\nLineTwo\nLineThree\n", []int{2, 3}, "LineOne\n"},
+		{"LineOne\nLineTwo\nLineThree\n", []int{1, 3}, "LineTwo\n"},
+		{"LineOne\nLineTwo\nLineThree\n", []int{1, 2}, "LineThree\n"},
+		{"LineOne\nLineTwo\nLineThree\n", []int{3}, "LineOne\nLineTwo\n"},
+		{"LineOne\nLineTwo\nLineThree\n", []int{2}, "LineOne\nLineThree\n"},
+		{"LineOne\nLineTwo\nLineThree\n", []int{}, "LineOne\nLineTwo\nLineThree\n"},
+
+		{"LineOne\r\nLineTwo\r\nLineThree\r\n", []int{}, "LineOne\nLineTwo\nLineThree\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree\r\n", []int{2, 3}, "LineOne\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree\r\n", []int{1, 3}, "LineTwo\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree\r\n", []int{1, 2}, "LineThree\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree\r\n", []int{3}, "LineOne\nLineTwo\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree\r\n", []int{2}, "LineOne\nLineThree\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree\r\n", []int{}, "LineOne\nLineTwo\nLineThree\n"},
+
+		{"LineOne\r\nLineTwo\r\nLineThree", []int{}, "LineOne\nLineTwo\nLineThree\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree", []int{2, 3}, "LineOne\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree", []int{1, 3}, "LineTwo\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree", []int{1, 2}, "LineThree\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree", []int{3}, "LineOne\nLineTwo\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree", []int{2}, "LineOne\nLineThree\n"},
+		{"LineOne\r\nLineTwo\r\nLineThree", []int{}, "LineOne\nLineTwo\nLineThree\n"},
+	}
+
+	for _, test := range tests {
+		var to bytes.Buffer
+
+		err := CopyWithoutLines(bytes.NewBufferString(test.From), test.Lines, &to)
+		if err != nil {
+			t.Errorf("CopyWithoutLines(%q, %v, %v) errored out: %v", test.From, test.Lines, to, err)
+		}
+
+		read, _ := ioutil.ReadAll(&to)
+
+		if string(read) != test.Expected {
+			t.Errorf("CopyWithoutLines(%q, %v, ..) result mismatch. Expected %q, got %q", test.From, test.Lines, test.Expected, string(read))
+		}
+	}
 }
 
 /*

@@ -63,24 +63,25 @@ func CountCaseSensitive(haystack io.Reader, needle string) (int, error) {
 // It returns the line numbers where it found such strings, or an error if something went wrong.
 func FindIgnoreCase(haystack io.Reader, needle string) (occurrences []int, err error) {
 	lines := 1
-	reader := bufio.NewReader(haystack)
+	r := bufio.NewReader(haystack)
 
 	for {
-		line, err := reader.ReadString('\n')
+		line, _, err := r.ReadLine()
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
 
-			return nil, err
+			return nil, fmt.Errorf("reading line: %v", err)
 		}
 
-		if IContains(line, needle) {
+		if IContains(string(line), needle) {
 			occurrences = append(occurrences, lines)
 		}
 
 		lines++
 	}
+
 	return occurrences, nil
 }
 
@@ -88,19 +89,19 @@ func FindIgnoreCase(haystack io.Reader, needle string) (occurrences []int, err e
 // It returns the line numbers where it found such strings, or an error if something went wrong.
 func FindCaseSensitive(haystack io.Reader, needle string) (occurrences []int, err error) {
 	lines := 1
-	reader := bufio.NewReader(haystack)
+	r := bufio.NewReader(haystack)
 
 	for {
-		line, err := reader.ReadString('\n')
+		line, _, err := r.ReadLine()
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
 
-			return nil, err
+			return nil, fmt.Errorf("reading line: %v", err)
 		}
 
-		if strings.Contains(line, needle) {
+		if strings.Contains(string(line), needle) {
 			occurrences = append(occurrences, lines)
 		}
 
@@ -114,19 +115,18 @@ func FindCaseSensitive(haystack io.Reader, needle string) (occurrences []int, er
 // It returns the line numbers where it found such strings, or an error if something went wrong.
 func FindStartsWith(haystack io.Reader, needle string) (occurrences []int, err error) {
 	lines := 1
-	reader := bufio.NewReader(haystack)
+	r := bufio.NewReader(haystack)
 
 	for {
-		line, err := reader.ReadString('\n')
+		line, _, err := r.ReadLine()
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
 
-			return nil, err
 		}
 
-		if strings.HasPrefix(line, needle) {
+		if strings.HasPrefix(string(line), needle) {
 			occurrences = append(occurrences, lines)
 		}
 
@@ -165,7 +165,7 @@ func FindWith(find func(string, string) bool, haystack io.Reader, needle string)
 				break
 			}
 
-			return nil, err
+			return nil, fmt.Errorf("reading line: %v", err)
 		}
 
 		if find(string(line), needle) {
@@ -210,19 +210,11 @@ func CopyLines(from io.Reader, lines []int, to io.Writer) error {
 		lineMap[l] = true
 	}
 
-	r := bufio.NewReader(from)
+	scanner := bufio.NewScanner(from)
 	lnum := 0
 
-	for {
-
-		line, _, err := r.ReadLine()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-
-			return fmt.Errorf("error reading from reader: %v", err)
-		}
+	for scanner.Scan() {
+		line := scanner.Text()
 
 		lnum++
 
@@ -232,6 +224,10 @@ func CopyLines(from io.Reader, lines []int, to io.Writer) error {
 
 		to.Write([]byte(line))
 		to.Write([]byte("\n"))
+	}
+
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("reading from file: %v", err)
 	}
 
 	return nil
@@ -246,19 +242,11 @@ func CopyWithoutLines(from io.Reader, lines []int, to io.Writer) error {
 		lineMap[l] = true
 	}
 
-	r := bufio.NewReader(from)
+	scanner := bufio.NewScanner(from)
 	lnum := 0
 
-	for {
-
-		line, _, err := r.ReadLine()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-
-			return fmt.Errorf("error reading from reader: %v", err)
-		}
+	for scanner.Scan() {
+		line := scanner.Text()
 
 		lnum++
 
@@ -268,6 +256,10 @@ func CopyWithoutLines(from io.Reader, lines []int, to io.Writer) error {
 
 		to.Write([]byte(line))
 		to.Write([]byte("\n"))
+	}
+
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("reading from file: %v", err)
 	}
 
 	return nil

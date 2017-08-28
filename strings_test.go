@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -107,9 +108,8 @@ func TestCountCaseSensitive(t *testing.T) {
 
 func TestFindIgnoreCase(t *testing.T) {
 	var (
-		result      []int
-		expectedLen int
-
+		result              []int
+		expectedLen         int
 		expectedLineNumbers = []int{4, 5}
 
 		buf = bytes.NewBufferString(testString)
@@ -119,7 +119,7 @@ func TestFindIgnoreCase(t *testing.T) {
 	expectedLen = 2
 
 	if len(result) != expectedLen {
-		t.Errorf("Mismatch. Expected count=%d, got result=%d", expectedLen, len(result))
+		t.Fatalf("Mismatch. Expected count=%d, got result=%d", expectedLen, len(result))
 	}
 
 	if result[0] != expectedLineNumbers[0] || result[1] != expectedLineNumbers[1] {
@@ -154,7 +154,7 @@ func TestFindCaseSensitive(t *testing.T) {
 	expectedLen = 2
 
 	if len(result) != expectedLen {
-		t.Errorf("Mismatch. Expected count=%d, got result=%d", expectedLen, len(result))
+		t.Fatalf("Mismatch. Expected count=%d, got result=%d", expectedLen, len(result))
 	}
 
 	if result[0] != expectedLineNumbers[0] || result[1] != expectedLineNumbers[1] {
@@ -185,7 +185,7 @@ func TestFindWithPrefix(t *testing.T) {
 	expectedLen = 1
 
 	if len(result) != expectedLen {
-		t.Errorf("Mismatch. Expected count=%d, got result=%d", expectedLen, len(result))
+		t.Fatalf("Mismatch. Expected count=%d, got result=%d", expectedLen, len(result))
 	}
 
 	if result[0] != 1 {
@@ -260,37 +260,95 @@ func TestOccursWith(t *testing.T) {
 		Haystack string
 		Needles  []string
 		Expected []int
+		Method   func(string, string) bool
 	}{
-		{"looking for this\nbut not for that\n", []string{""}, []int{}},
-		{"looking for this\nbut not for that\n", []string{"this"}, []int{1}},
-		{"looking for this\nbut not for that\n", []string{"that"}, []int{2}},
-		{"looking for this\nbut not for that\n", []string{"for"}, []int{1, 2}},
+		{"looking for this\nbut not for that\n", []string{""}, []int{}, strings.Contains},
+		{"looking for this\nbut not for that\n", []string{"this"}, []int{1}, strings.Contains},
+		{"looking for this\nbut not for that\n", []string{"that"}, []int{2}, strings.Contains},
+		{"looking for this\nbut not for that\n", []string{"for"}, []int{1, 2}, strings.Contains},
 
-		{"looking for this\nbut not for that", []string{""}, []int{}},
-		{"looking for this\nbut not for that", []string{"this"}, []int{1}},
-		{"looking for this\nbut not for that", []string{"that"}, []int{2}},
-		{"looking for this\nbut not for that", []string{"for"}, []int{1, 2}},
+		{"looking for this\nbut not for that", []string{""}, []int{}, strings.Contains},
+		{"looking for this\nbut not for that", []string{"this"}, []int{1}, strings.Contains},
+		{"looking for this\nbut not for that", []string{"that"}, []int{2}, strings.Contains},
+		{"looking for this\nbut not for that", []string{"for"}, []int{1, 2}, strings.Contains},
 
-		{"looking for this\r\nbut not for that\r\n", []string{""}, []int{}},
-		{"looking for this\r\nbut not for that\r\n", []string{"this"}, []int{1}},
-		{"looking for this\r\nbut not for that\r\n", []string{"that"}, []int{2}},
-		{"looking for this\r\nbut not for that\r\n", []string{"for"}, []int{1, 2}},
+		{"looking for this\r\nbut not for that\r\n", []string{""}, []int{}, strings.Contains},
+		{"looking for this\r\nbut not for that\r\n", []string{"this"}, []int{1}, strings.Contains},
+		{"looking for this\r\nbut not for that\r\n", []string{"that"}, []int{2}, strings.Contains},
+		{"looking for this\r\nbut not for that\r\n", []string{"for"}, []int{1, 2}, strings.Contains},
 
-		{"looking for this\r\nbut not for that", []string{""}, []int{}},
-		{"looking for this\r\nbut not for that", []string{"this"}, []int{1}},
-		{"looking for this\r\nbut not for that", []string{"that"}, []int{2}},
-		{"looking for this\r\nbut not for that", []string{"for"}, []int{1, 2}},
+		{"looking for this\r\nbut not for that", []string{""}, []int{}, strings.Contains},
+		{"looking for this\r\nbut not for that", []string{"this"}, []int{1}, strings.Contains},
+		{"looking for this\r\nbut not for that", []string{"that"}, []int{2}, strings.Contains},
+		{"looking for this\r\nbut not for that", []string{"for"}, []int{1, 2}, strings.Contains},
+
+		{"looking for this\nbut not for that\n", []string{""}, []int{}, strings.HasPrefix},
+		{"looking for this\nbut not for that\n", []string{"looking"}, []int{1}, strings.HasPrefix},
+		{"looking for this\nbut not for that\n", []string{"but"}, []int{2}, strings.HasPrefix},
+		{"looking for this\nlooking for that\n", []string{"looking"}, []int{1, 2}, strings.HasPrefix},
 	}
 
 	for _, test := range tests {
-		found, err := OccursWith(strings.Contains, bytes.NewBufferString(test.Haystack), test.Needles)
+		found, err := OccursWith(test.Method, bytes.NewBufferString(test.Haystack), test.Needles)
 		if err != nil {
-			t.Errorf("OccursWith(strings.Contains, %q, %q) errored out: %v", test.Haystack, test.Needles, err)
+			t.Errorf("OccursWith(test.Method, %q, %q) errored out: %v", test.Haystack, test.Needles, err)
 		}
 
 		if !reflect.DeepEqual(test.Expected, found) {
 			t.Errorf("OccursWith(strings.Contains, %q, %q) result mismatch. Expected %#v, got %#v", test.Haystack, test.Needles, test.Expected, found)
 		}
+	}
+}
+
+func TestOccursWithInFile(t *testing.T) {
+	tests := []struct {
+		Needles  []string
+		Expected []int
+		Method   func(string, string) bool
+	}{
+		{[]string{""}, []int{}, strings.Contains},
+		{[]string{"this"}, []int{1}, strings.Contains},
+		{[]string{"that"}, []int{2}, strings.Contains},
+		{[]string{"for"}, []int{1, 2}, strings.Contains},
+
+		{[]string{""}, []int{}, strings.Contains},
+		{[]string{"this"}, []int{1}, strings.Contains},
+		{[]string{"that"}, []int{2}, strings.Contains},
+		{[]string{"for"}, []int{1, 2}, strings.Contains},
+
+		{[]string{""}, []int{}, strings.Contains},
+		{[]string{"this"}, []int{1}, strings.Contains},
+		{[]string{"that"}, []int{2}, strings.Contains},
+		{[]string{"for"}, []int{1, 2}, strings.Contains},
+
+		{[]string{""}, []int{}, strings.HasPrefix},
+		{[]string{"looking"}, []int{1, 2}, strings.HasPrefix},
+		{[]string{"but"}, []int{}, strings.HasPrefix},
+		{[]string{"looking"}, []int{1, 2}, strings.HasPrefix},
+	}
+
+	tmpfile, err := ioutil.TempFile("./", "test")
+	if err != nil {
+		t.Errorf("failed creating temp file: %v", err)
+	}
+	defer tmpfile.Close()
+	defer os.Remove(tmpfile.Name())
+
+	fmt.Fprintf(tmpfile, "looking for this\n")
+	fmt.Fprintf(tmpfile, "looking for that\n")
+
+	reader := ioutil.NopCloser(tmpfile)
+	for _, test := range tests {
+		found, err := OccursWith(test.Method, reader, test.Needles)
+		if err != nil {
+			t.Errorf("OccursWith(test.Method, tempfile, %q) errored out: %v", test.Needles, err)
+		}
+
+		if !reflect.DeepEqual(test.Expected, found) {
+			t.Errorf("OccursWith(test.Method, tmpfile, %q) result mismatch. Expected %#v, got %#v", test.Needles, test.Expected, found)
+		}
+
+		tmpfile.Seek(0, 0)
 	}
 }
 

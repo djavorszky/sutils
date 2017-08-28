@@ -149,10 +149,10 @@ func TrimNL(s string) string {
 // if the second argument is found in the first one, false otherwise.
 //
 // FindWith's return is indexed from 1 instead of 0.
-func FindWith(find func(string, string) bool, haystack io.Reader, needle string) ([]int, error) {
+func FindWith(find func(string, string) bool, haystack io.Reader, needles []string) ([]int, error) {
 	occurrences := make([]int, 0)
 
-	if needle == "" {
+	if needles[0] == "" {
 		return occurrences, nil
 	}
 
@@ -168,8 +168,13 @@ func FindWith(find func(string, string) bool, haystack io.Reader, needle string)
 			return nil, fmt.Errorf("reading line: %v", err)
 		}
 
-		if find(string(line), needle) {
-			occurrences = append(occurrences, lnum)
+		sline := string(line)
+
+		for _, needle := range needles {
+			if find(sline, needle) {
+				occurrences = append(occurrences, lnum)
+				break
+			}
 		}
 
 		lnum++
@@ -183,14 +188,12 @@ func FindWith(find func(string, string) bool, haystack io.Reader, needle string)
 func OccursWith(find func(string, string) bool, haystack io.Reader, needles []string) ([]int, error) {
 	occurrences := make([]int, 0)
 
-	for _, needle := range needles {
-		lines, err := FindWith(find, haystack, needle)
-		if err != nil {
-			return nil, err
-		}
-
-		occurrences = append(occurrences, lines...)
+	lines, err := FindWith(find, haystack, needles)
+	if err != nil {
+		return nil, err
 	}
+
+	occurrences = append(occurrences, lines...)
 
 	return occurrences, nil
 }

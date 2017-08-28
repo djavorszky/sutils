@@ -115,7 +115,7 @@ func TestFindIgnoreCase(t *testing.T) {
 		buf = bytes.NewBufferString(testString)
 	)
 
-	result, _ = FindWith(IContains, buf, "my chamber")
+	result, _ = FindWith(IContains, buf, []string{"my chamber"})
 	expectedLen = 2
 
 	if len(result) != expectedLen {
@@ -128,7 +128,7 @@ func TestFindIgnoreCase(t *testing.T) {
 
 	buf = bytes.NewBufferString(testString)
 
-	result, _ = FindWith(IContains, buf, "MY chamber")
+	result, _ = FindWith(IContains, buf, []string{"MY chamber"})
 	expectedLen = 2
 
 	if len(result) != expectedLen {
@@ -150,7 +150,7 @@ func TestFindCaseSensitive(t *testing.T) {
 		buf = bytes.NewBufferString(testString)
 	)
 
-	result, _ = FindWith(strings.Contains, buf, "my chamber")
+	result, _ = FindWith(strings.Contains, buf, []string{"my chamber"})
 	expectedLen = 2
 
 	if len(result) != expectedLen {
@@ -181,7 +181,7 @@ func TestFindWithPrefix(t *testing.T) {
 		buf = bytes.NewBufferString(testString)
 	)
 
-	result, _ = FindWith(strings.HasPrefix, buf, "Once")
+	result, _ = FindWith(strings.HasPrefix, buf, []string{"Once"})
 	expectedLen = 1
 
 	if len(result) != expectedLen {
@@ -233,14 +233,14 @@ func TestTrimNL(t *testing.T) {
 func TestFindWith(t *testing.T) {
 	tests := []struct {
 		Haystack string
-		Needle   string
+		Needle   []string
 		Expected []int
 	}{
-		{"looking for this\nbut not for that\n", "", []int{}},
-		{"looking for this\nbut not for that\n", "Madness", []int{}},
-		{"looking for this\nbut not for that\n", "this", []int{1}},
-		{"looking for this\nbut not for that\n", "that", []int{2}},
-		{"looking for this\nbut not for that\n", "for", []int{1, 2}},
+		{"looking for this\nbut not for that\n", []string{""}, []int{}},
+		{"looking for this\nbut not for that\n", []string{"Madness"}, []int{}},
+		{"looking for this\nbut not for that\n", []string{"this"}, []int{1}},
+		{"looking for this\nbut not for that\n", []string{"that"}, []int{2}},
+		{"looking for this\nbut not for that\n", []string{"for"}, []int{1, 2}},
 	}
 
 	for _, test := range tests {
@@ -482,19 +482,19 @@ func BenchmarkFindCaseSensitive(b *testing.B) {
 
 func BenchmarkFindWithStringsContains(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		FindWith(strings.Contains, bytes.NewBufferString(testString), "weary")
+		FindWith(strings.Contains, bytes.NewBufferString(testString), []string{"weary"})
 	}
 }
 
 func BenchmarkFindWithStringsHasPrefix(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		FindWith(strings.HasPrefix, bytes.NewBufferString(testString), "weary")
+		FindWith(strings.HasPrefix, bytes.NewBufferString(testString), []string{"weary"})
 	}
 }
 
 func BenchmarkFindWithStringsContainsAny(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		FindWith(strings.ContainsAny, bytes.NewBufferString(testString), "weary")
+		FindWith(strings.ContainsAny, bytes.NewBufferString(testString), []string{"weary"})
 	}
 }
 

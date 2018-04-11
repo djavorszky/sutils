@@ -289,13 +289,13 @@ func TestOccursWith(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		found, err := OccursWith(test.Method, bytes.NewBufferString(test.Haystack), test.Needles)
+		found, err := FindWith(test.Method, bytes.NewBufferString(test.Haystack), test.Needles)
 		if err != nil {
-			t.Errorf("OccursWith(test.Method, %q, %q) errored out: %v", test.Haystack, test.Needles, err)
+			t.Errorf("FindWith(test.Method, %q, %q) errored out: %v", test.Haystack, test.Needles, err)
 		}
 
 		if !reflect.DeepEqual(test.Expected, found) {
-			t.Errorf("OccursWith(strings.Contains, %q, %q) result mismatch. Expected %#v, got %#v", test.Haystack, test.Needles, test.Expected, found)
+			t.Errorf("FindWith(strings.Contains, %q, %q) result mismatch. Expected %#v, got %#v", test.Haystack, test.Needles, test.Expected, found)
 		}
 	}
 }
@@ -339,13 +339,13 @@ func TestOccursWithInFile(t *testing.T) {
 
 	reader := ioutil.NopCloser(tmpfile)
 	for _, test := range tests {
-		found, err := OccursWith(test.Method, reader, test.Needles)
+		found, err := FindWith(test.Method, reader, test.Needles)
 		if err != nil {
-			t.Errorf("OccursWith(test.Method, tempfile, %q) errored out: %v", test.Needles, err)
+			t.Errorf("FindWith(test.Method, tempfile, %q) errored out: %v", test.Needles, err)
 		}
 
 		if !reflect.DeepEqual(test.Expected, found) {
-			t.Errorf("OccursWith(test.Method, tmpfile, %q) result mismatch. Expected %#v, got %#v", test.Needles, test.Expected, found)
+			t.Errorf("FindWith(test.Method, tmpfile, %q) result mismatch. Expected %#v, got %#v", test.Needles, test.Expected, found)
 		}
 
 		tmpfile.Seek(0, 0)

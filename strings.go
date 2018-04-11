@@ -156,44 +156,27 @@ func FindWith(find func(string, string) bool, haystack io.Reader, needles []stri
 		return occurrences, nil
 	}
 
-	lnum := 1
-	r := bufio.NewReader(haystack)
-	for {
-		line, _, err := r.ReadLine()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
+	scanner := bufio.NewScanner(haystack)
+	buf := make([]byte, 0, 10*1024*1024)
+	scanner.Buffer(buf, 10*1024*1024)
 
-			return nil, fmt.Errorf("reading line: %v", err)
-		}
+	lnum := 0
+	for scanner.Scan() {
+		lnum++
 
-		sline := string(line)
+		line := scanner.Text()
 
 		for _, needle := range needles {
-			if find(sline, needle) {
+			if find(line, needle) {
 				occurrences = append(occurrences, lnum)
 				break
 			}
 		}
-
-		lnum++
 	}
 
-	return occurrences, nil
-}
-
-// OccursWith applies the "find" function to haystack on all needles. Utilizes
-// "FindWith"
-func OccursWith(find func(string, string) bool, haystack io.Reader, needles []string) ([]int, error) {
-	occurrences := make([]int, 0)
-
-	lines, err := FindWith(find, haystack, needles)
-	if err != nil {
-		return nil, err
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("reading file: %v", err)
 	}
-
-	occurrences = append(occurrences, lines...)
 
 	return occurrences, nil
 }
@@ -226,7 +209,7 @@ func CopyLines(from io.Reader, lines []int, to io.Writer) error {
 		}
 
 		to.Write([]byte(line))
-		to.Write([]byte("\n"))
+		to.Write([]byte(fmt.Sprintln()))
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -246,12 +229,14 @@ func CopyWithoutLines(from io.Reader, lines []int, to io.Writer) error {
 	}
 
 	scanner := bufio.NewScanner(from)
+	buf := make([]byte, 0, 10*1024*1024)
+	scanner.Buffer(buf, 10*1024*1024)
+
 	lnum := 0
-
 	for scanner.Scan() {
-		line := scanner.Text()
-
 		lnum++
+
+		line := scanner.Text()
 
 		if _, ok := lineMap[lnum]; ok {
 			continue
